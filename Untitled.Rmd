@@ -1,0 +1,217 @@
+---
+title: "SAD Project Phishing 10"
+author: "Eljon Hida (0522501890), Francesco Ferrara (0522501959)"
+date: "2025-02-15"
+output:
+  html_document:
+    toc: true
+    theme: united
+  pdf_document: default
+---
+
+#Caricamento dataset e preparazione
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readxl)
+library(ggplot2)
+library(dplyr)
+
+#---- DEFINIZIONE DEI PATH ----
+
+setwd("/Volumes/External D/Università/Statistica ed Analisi Dati/Analisi_Statistica_Phishing10/Dataset")
+source("Functions.R")
+
+
+#---- CARICAMENTO DEI DATASET ----
+
+dataset <- read.csv("DatasetStatistica - Phishing_URL_Dataset_10.csv")
+
+urls <- c(dataset$URLLength)
+phishing_urls <- dataset[dataset$label == 0, c("URLLength")]
+legitimate_urls <- dataset[dataset$label == 1, c("URLLength")]
+quartiliUrlL <- quantile(urls, probs = c(0, 0.25, 0.5, 0.75, 1), na.rm = TRUE)
+
+extref <- c(dataset$NoOfExternalRef)
+phishing_extref <- dataset[dataset$label == 0, c("NoOfExternalRef")]
+legitimate_extref <- dataset[dataset$label == 1, c("NoOfExternalRef")]
+quartiliExtRef <- quantile(extref, probs = c(0, 0.25, 0.5, 0.75, 1), na.rm = TRUE)
+
+```
+
+# Statistica Descrittiva Univariata
+
+## Indici di Centralità
+
+```{r indici di centralità, echo=FALSE}
+#---- CALCOLO INDICI DI CENTRALITÀ ----
+
+urls_min = min(urls)
+phishing_urls_min = min(phishing_urls)
+legitimate_urls_min = min(legitimate_urls)
+
+extref_min = min(extref)
+phishing_extref_min = min(phishing_extref)
+legitimate_extref_min = min(legitimate_extref)
+
+urls_max = max(urls)
+phishing_urls_max = max(phishing_urls)
+legitimate_urls_max = max(legitimate_urls)
+
+extref_max = max(extref)
+phishing_extref_max = max(phishing_extref)
+legitimate_extref_max = max(legitimate_extref)
+
+urls_mean = mean(urls)
+phishing_urls_mean = mean(phishing_urls)
+legitimate_urls_mean = mean(legitimate_urls)
+
+extref_mean = mean(extref)
+phishing_extref_mean = mean(phishing_extref)
+legitimate_extref_mean = mean(legitimate_extref)
+
+urls_median = median(urls)
+phishing_urls_median = median(phishing_urls)
+legitimate_urls_median = median(legitimate_urls)
+
+extref_median = median(extref)
+phishing_extref_median = median(phishing_extref)
+legitimate_extref_median = median(legitimate_extref)
+
+urls_moda = f_moda(urls)
+phishing_urls_moda = f_moda(phishing_urls)
+legitimate_urls_moda = f_moda(legitimate_urls)
+
+extref_moda = f_moda(extref)
+phishing_extref_moda = f_moda(phishing_extref)
+legitimate_extref_moda = f_moda(legitimate_extref)
+
+UrlL_indiciCentr = rbind(c(urls_min,urls_max,urls_mean,urls_median,urls_moda),c(phishing_urls_min,phishing_urls_max,phishing_urls_mean,phishing_urls_median,phishing_urls_moda),c(legitimate_urls_min,legitimate_urls_max,legitimate_urls_mean,legitimate_urls_median,legitimate_urls_moda))
+colnames(UrlL_indiciCentr) = c("MIN", "MAX", "MEDIA", "MEDIANA","MODA")
+rownames(UrlL_indiciCentr) = c("ALL","Phishing(label=0)","non-Phishing(label=1)")
+
+ExtRef_indiciCentr = rbind(c(extref_min,extref_max,extref_mean,extref_median,extref_moda),c(phishing_extref_min,phishing_extref_max,phishing_extref_mean,phishing_extref_median,phishing_extref_moda),c(legitimate_extref_min,legitimate_extref_max,legitimate_extref_mean,legitimate_extref_median,legitimate_extref_moda))
+colnames(ExtRef_indiciCentr) = c("MIN", "MAX", "MEDIA", "MEDIANA","MODA")
+rownames(ExtRef_indiciCentr) = c("ALL","Phishing(label=0)","non-Phishing(label=1)")
+
+```
+
+### Indici di Centralità per URLLength
+
+```{r view URLLength indici di centralità, echo=FALSE}
+
+UrlL_indiciCentr
+cat("\n----------------------------\n\n")  # Separatore per rendere le tabelle più chiare
+f_calcola_quartili(dataset,"URLLength")
+
+```
+
+### Indici di Centralità per NoOfExternalRef
+
+```{r view NoOfExternalRef indici di centralità, echo=FALSE}
+
+ExtRef_indiciCentr
+cat("\n----------------------------\n\n")  
+f_calcola_quartili(dataset,"NoOfExternalRef")
+
+```
+
+## Indici di Dispersione
+
+```{r indici di dispersione, echo=FALSE}
+
+urls_cv = cv(urls)
+phishing_urls_cv = cv(phishing_urls)
+legitimate_urls_cv = cv(legitimate_urls)
+
+extref_cv = cv(extref)
+phishing_extref_cv = cv(phishing_extref)
+legitimate_extref_cv = cv(legitimate_extref)
+
+UrlL_diffInterq = unname(quantile(sort(urls), probs = 0.75)) - unname(quantile(sort(urls), probs = 0.25))
+UrlL_diffInterqPhishing = unname(quantile(sort(phishing_urls), probs = 0.75)) - unname(quantile(sort(phishing_urls), probs = 0.25))
+UrlL_diffInterqLegitimate = unname(quantile(sort(legitimate_urls), probs = 0.75)) - unname(quantile(sort(legitimate_urls), probs = 0.25))
+
+ExtRef_diffInterq = unname(quantile(sort(extref), probs = 0.75)) - unname(quantile(sort(extref), probs = 0.25))
+ExtRef_diffInterqPhishing = unname(quantile(sort(phishing_extref), probs = 0.75)) - unname(quantile(sort(phishing_extref), probs = 0.25))
+ExtRef_diffInterqLegitimate = unname(quantile(sort(legitimate_extref), probs = 0.75)) - unname(quantile(sort(legitimate_extref), probs = 0.25))
+
+urls_var = var(as.vector(urls)) # as.vector è usato per ottenere il calcolo della varianza di una singola variabile
+phishing_urls_var = var(as.vector(phishing_urls))
+legitimate_urls_var = var(as.vector(legitimate_urls))
+
+extref_var = var(as.vector(extref))
+phishing_extref_var = var(as.vector(phishing_extref))
+legitimate_extref_var = var(as.vector(legitimate_extref))
+
+urls_sd = sd(urls)
+phishing_urls_sd = sd(phishing_urls)
+legitimate_urls_sd = sd(legitimate_urls)
+
+extref_sd = sd(extref)
+phishing_extref_sd = sd(phishing_extref)
+legitimate_extref_sd = sd(legitimate_extref)
+
+UrlL_indiciDisp = rbind(c(urls_cv,UrlL_diffInterq,urls_var,urls_sd),c(phishing_urls_cv,UrlL_diffInterqPhishing,phishing_urls_var,phishing_urls_sd),c(legitimate_urls_cv,UrlL_diffInterqLegitimate,legitimate_urls_var,legitimate_urls_sd))
+colnames(UrlL_indiciDisp) = c("CV", "INTER. INTERQ.", "VARIANZA", "DEVIAZ. STD")
+rownames(UrlL_indiciDisp) = c("ALL","Phishing(label=0)","non-Phishing(label=1)")
+
+ExtRef_indiciDisp = rbind(c(extref_cv,ExtRef_diffInterq,extref_var,extref_sd),c(phishing_extref_cv,ExtRef_diffInterqPhishing,phishing_extref_var,phishing_extref_sd),c(legitimate_extref_cv,ExtRef_diffInterqLegitimate,legitimate_extref_var,legitimate_extref_sd))
+colnames(ExtRef_indiciDisp) = c("CV", "INTER. INTERQ.", "VARIANZA", "DEVIAZ. STD")
+rownames(ExtRef_indiciDisp) = c("ALL","Phishing(label=0)","non-Phishing(label=1)")
+
+```
+
+### Indici di Dispersione URLLength
+
+```{r view URLLength indici di dispersione, echo=FALSE}
+
+UrlL_indiciDisp
+
+```
+
+### Indici di Dispersione NoOfExternalRef
+
+```{r view NoOfExternalRef indici di dispersione, echo=FALSE}
+
+ExtRef_indiciDisp
+
+```
+
+## Quartili
+
+```{r quartili, echo=FALSE}
+
+par(mfrow=c(2, 3)) #Suddivisione finestra grafica nella quale verrano inseriti i plot(2 righe e 3 colonne)
+
+f_quantili(urls,"ALL-URLLength")
+f_quantili(phishing_urls,"Phishing-URLLength")
+f_quantili(legitimate_urls,"non-Phishing-URLLength")
+
+f_quantili(extref,"ALL-NoOfExtEef")
+f_quantili(phishing_extref,"Phishing-NoOfExtRef")
+f_quantili(legitimate_extref,"non-Phishing-NoOfExtRef")
+
+```
+
+## Funzione di Distribuzione Empirica Continua
+
+```{r FdDC, echo=FALSE}
+#---- FdDC - Funzione di Distribuzione Empirica Continua ----
+par(mfrow=c(2, 2))
+
+f_FdDC(dataset)
+
+```
+
+# Statistica Descrittiva Bivariata
+
+## Regressione Lineare
+
+```{r grafici di regressione, echo=FALSE}
+
+
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
