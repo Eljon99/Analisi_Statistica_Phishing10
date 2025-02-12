@@ -4,8 +4,9 @@
 Questo progetto è stato sviluppato per l'esame di Statistica ed Analisi dei Dati (UNISA). L'obiettivo principale di questo studio è esplorare il ruolo di specifiche caratteristiche degli URL nell'identificazione di siti di phishing rispetto a quelli legittimi. Attraverso l'applicazione di metodologie analitiche, verrà valutato in che misura tali caratteristiche influenzano la probabilità che un sito appartenga a una delle due categorie. Questo approccio permetterà di comprendere meglio i fattori chiave che contribuiscono alla rilevazione automatizzata delle minacce online, fornendo basi empiriche per lo sviluppo di strumenti di sicurezza più efficaci.
 
 ## Autori
-
-
+<a href="https://github.com/Eljon99/Analisi_Statistica_Phishing10/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Eljon99/Analisi_Statistica_Phishing10" />
+</a>
 
 * [Eljon Hida](https://github.com/Eljon99)
 * [Francesco Ferrara](https://github.com/Rokuoganz)
