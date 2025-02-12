@@ -29,6 +29,7 @@ Il dataset usato in questo studio cataloga vari URL in: URL di phishing e URL le
 2. Clonare la repository GitHub.
 3. Aprire il progetto in RStudio.
 4. Esegui il codice presente nel file `docs.Rmd` per generare l'analisi e visualizzare i risultati.
+5. Eseguire i codici `ClusteringURLLength.R` e `ClusteringNoOfExternalRef.R` per visualizzare il clustering.
 
 ## Struttura del Progetto
 - `docs.Rmd`: Documento R Markdown con l'analisi completa.
