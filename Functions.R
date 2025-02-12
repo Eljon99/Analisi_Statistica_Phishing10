@@ -16,6 +16,32 @@ f_moda = function(x) {
 }
 
 
+# Funzione per il calcolo delle frequenze
+f_calcola_frequenze <- function(intervalli) {
+  
+  # Calcola le frequenze assolute
+  freq_assoluta <- table(intervalli)
+  
+
+  freq_relativa <- prop.table(freq_assoluta)
+  
+
+  freq_cumulata <- cumsum(freq_relativa)
+  
+  # Crea un dataframe per una visualizzazione ordinata
+  df_frequenze <- data.frame(
+    Intervalli = names(freq_assoluta),
+    Frequenza_Assoluta = as.vector(freq_assoluta),
+    Frequenza_Relativa = round(as.vector(freq_relativa), 4),
+    Frequenza_Cumulata = round(as.vector(freq_cumulata), 4)
+  )
+  
+
+  print(df_frequenze)
+
+}
+
+
 # Funzione che crea 2 grafici (URLLength e NoOfObfuscatedChar) con i boxplot di 5 anni consecutivi
 f_quantili = function (data, name){ # name = titolo del grafico, data = dataset inviato alla funzione
     # Creazione del boxplot
@@ -64,9 +90,12 @@ f_calcola_quartili = function(data, feature) {
 }
 
 
-# Funzione che calcola la FdDC basata su URLLength
+
+
+
+# Funzione che calcola la FdDC
 f_FdDC <- function(dataset){
-  # QUESTA FUNZIONE DOVREBBE ESSERE FATTA PER I VARI CASI, SIA PHISHING CHE NON E PER OGNI VARIABILE ??????
+  
   #URLLength
   urls <- c(dataset$URLLength)
   freqRel <- table(urls)/length(urls)
@@ -74,11 +103,14 @@ f_FdDC <- function(dataset){
   round(freqRel,3)
   
   m <- length(freqRel)
-  classi_url <- c(14,24,28,34,50)
-  intervalli <- cut(urls, breaks=classi_url, right=FALSE)
+  classi_url <- quantile(urls, probs = c(0, 0.25, 0.5, 0.75, 1), na.rm = TRUE)
+  intervalli <- cut(urls, breaks=classi_url, include.lowest = TRUE, right=FALSE)
   freqRelClassi <- table(intervalli)/length(urls)
   Fcum <- cumsum(freqRelClassi)
   Fcum[4] <- Fcum[4] + freqRel[m]
+  freqAss <- table(intervalli)
+  
+  f_calcola_frequenze(intervalli)
   
   ascisse <- c(0,14,24,28,34,50)
   ordinate <- c(0,Fcum[1:4],1)
@@ -93,18 +125,22 @@ f_FdDC <- function(dataset){
   box()
   
   
-  #NoOfObfuscatedChar
+  #NoOfExternalRef
   extref <- c(dataset$NoOfExternalRef)
   freqRel2 <- table(extref)/length(extref)
   freqRel2
   round(freqRel2,3)
   
   m2 <- length(freqRel2)
-  classi_extref <- c(14,24,28,34,50)
+  classi_extref <- quantile(extref, probs = c(0, 0.25, 0.5, 0.75, 1), na.rm = TRUE)
   intervalli2 <- cut(extref, breaks=classi_extref, right=FALSE)
   freqRelClassi2 <- table(intervalli2)/length(extref)
   Fcum2 <- cumsum(freqRelClassi2)
   Fcum2[4] <- Fcum2[4] + freqRel2[m2]
+  freqAss2 <- table(intervalli2)
+  
+  f_calcola_frequenze(intervalli2)
+  
   
   ascisse2 <- c(0,14,24,34,56,60)
   ordinate2 <- c(0,Fcum2[1:4],1)
@@ -117,162 +153,145 @@ f_FdDC <- function(dataset){
   axis(1, ascisse2)  # Asse x
   axis(2, seq(0, 1, by=0.4))  
   box()
+  
+  # Stampa i valori della FdDC per URLLength
+  print(data.frame(URLLength = ascisse, FdDC = ordinate))
+  
+  # Stampa i valori della FdDC per NoOfExternalRef
+  print(data.frame(NoOfExternalRef = ascisse2, FdDC = ordinate2))
+  
 }
 
-
-#Funzione per i barplot di DPM
-#Per VSL non ha senso farlo, i valori sono uguali per ogni fascia di età
-f_barre_sovrapp_per_eta = function(country, data_15, dataComp, data64, tipo){
-  anni=rep(c(1995:2018),each=3)
-  classi=rep(c("15 -","15 + & 64 -","64+"),24)
-  
-  values=c(t(cbind(data_15[country,], dataComp[country,], data64[country,])))
-  df=data.frame(anni, classi, values)
-  ggplot(df, aes(fill=classi, y=values, x=anni)) + 
-    geom_bar(position="dodge", stat="identity", width=0.8,
-             alpha=0.7, colour="black") + 
-    ggtitle(paste(tipo," per Classi di Età (1995 - 2018) - ",country, sep="")) + 
-    theme(panel.background = element_blank(), axis.line = element_line(colour = "black"))
-}
-
-
-f_regressione_lineare = function(d1,d2,paese,offset){
-  c_cor=cor(d1,d2)
-  
-  model <- lm(d2~d1)
-  
-  if(summary(model)$r.squared > offset && (c_cor<(-0.85) || c_cor>0.85)) {
-    plot(d1,d2, col="red", main =paste("Scatterplot e Curva Stimata",paese,sep=" - "))
-    abline(model, col="blue")
-    stime <- fitted (model)
-    segments (d1, stime, d1, d2, col="magenta")
-    
-    summary <- summary(model)
-    # print(paese)
-    # print(summary$r.squared)
-    # print(c_cor)
-    
-    residui <- resid(model)
-    plot (d2, residui, main = paste("Diagramma dei residui",paese,sep=" - "),
-          xlab = "VSL" , ylab ="Residui " , pch =9 , col =" red " )
-    abline ( h =0 , col =" blue " , lty =2)
-    # print(residui)
-    
-    return(list(c_cor=c_cor, r_squared=summary$r.squared, summary=summary, resid = residui))
-  } else {
-    return(paese)
-  }
-}
-
-
-best_model_function <- function(d1, d2, paese) {
-  
-  # Definizione modelli di regressione studiati
-  models <- list(
-    lin = lm(d2 ~ d1),
-    quad = lm(d2 ~ d1 + I(d1^2)),
-    exp = lm(d2 ~ I(exp(d1))),
-    semilog = lm(I(log(d2)) ~ d1),
-    log = lm(I(log(d2)) ~ I(log(d1)))
-  )
-  
-  best_model <- NULL
-  best_r_squared <- -Inf
-  
-  temp_r_squared <- numeric(length(models))
-  
-  c_cor <- cor(d1, d2)
-  
-  for (model_name in names(models)) {
-    model <- models[[model_name]]
-    
-    r_squared <- summary(model)$r.squared
-    
-    temp_r_squared[which(names(models) == model_name)] <- r_squared
-    
-    if (r_squared > best_r_squared) {
-      best_r_squared <- r_squared
-      best_model <- model
-      best_model_name <- model_name
-    }
-  }
-  
-  
-  # Plot dei dati e della curva stimata
-  plot(d1, d2, col="red", main=paste("Scatterplot e Curva Stimata -", paese, "(", best_model_name, ")", "-", r_squared, sep=" "))
-  switch(
-    best_model_name,
-    "lin" = abline(best_model, col="blue"),
-    "quad" = curve(best_model$coefficients[[1]] + best_model$coefficients[[2]] * x + best_model$coefficients[[3]] * x^2, add=TRUE, col="blue"),
-    "exp" = curve(best_model$coefficients[[1]] * exp(best_model$coefficients[[2]] * x), add=TRUE, col="blue"),
-    "semilog" = curve(exp(best_model$coefficients[[1]] + best_model$coefficients[[2]] * x), add=TRUE, col="blue"),
-    "log" = curve(exp(best_model$coefficients[[1]] + best_model$coefficients[[2]] * log(x)), add=TRUE, col="blue")
-  )
-  
-  switch(
-    best_model_name,
-    "lin" = segments(d1, fitted(best_model), d1, d2, col="magenta"),
-    "quad" = segments(d1, best_model$coefficients[[1]] + best_model$coefficients[[2]] * d1 + best_model$coefficients[[3]] * (d1)^2, d1, d2, col="magenta"),
-    "exp" = segments(d1, best_model$coefficients[[1]] + best_model$coefficients[[2]] * exp (d1) , d1, d2, col="magenta"),
-    "semilog" = segments(d1, exp(best_model$coefficients[[1]] + best_model$coefficients[[2]] * d1), d1, d2, col="magenta"),
-    "log" = stime <- segments(d1, best_model$coefficients[[1]]*((d1)^ best_model$coefficients[[2]] ), d1, d2, col="magenta")
-  )
-  
-  # Plot dei residui
-  residui <- resid(best_model)
-  plot(d2, residui, main=paste("Diagramma dei residui -", paese), xlab="Valori previsti", ylab="Residui", pch=19, col="red")
-  abline(h=0, col="blue", lty=2)
-  
-  # Restituzione dei risultati
-  return(list(
-    model = best_model_name,
-    r_squared = best_r_squared,
-    # summary = summary(best_model),
-    resid = residui,
-    summary = data.frame(best_model=best_model_name, c_cor=c_cor, lin = temp_r_squared[1], quad = temp_r_squared[2], exp = temp_r_squared[3], semilog = temp_r_squared[4], log = temp_r_squared[5])
-  ))
-}
-
-
-# Funzione per clustering gerarchico
-hierarchClustering <- function(hls, n_clust, data, metodo, trHI, variabile) {
-  taglio_hls <- cutree(hls, k = n_clust, h = NULL)
-  
-  table_hls <- table(taglio_hls)
-  taglio_list_hls <- list(taglio_hls)
-  
-  # Calcolo misure di non omogeneità statistiche
-  agvar_hls <- aggregate(data, taglio_list_hls, var)[, -1]
-  
-  trH_values <- numeric(n_clust)
-  for(i in 1:n_clust) {
-    trH_values[i] <- (table_hls[[i]] - 1) * sum(agvar_hls[i, ])
-    if(is.na(trH_values[i])) trH_values[i] <- 0
-  }
-  
-  trH_within <- sum(trH_values)
-  trH_between <- trHI - trH_within
-  
-  
-  plot(hls, hang=-1, xlab=paste(variabile,"- Metodo gerarchico agglomerativo"), sub=metodo)
-  axis(side=4, at=round(c(0, hls$height), 2))
-  
-  rect.hclust(hls, k=n_clust, border=rainbow(n_clust))
-  
-  return(list(trH_within = trH_within, trH_between = trH_between))
-}
 
 
 # Funzione per clustering NON gerarchico
-kMeansClustering <- function(data, n_clust, n_start = 5, iter_max, variabile) {
-  km <- kmeans(data, centers = n_clust, nstart = n_start, iter.max = iter_max)
+f_kMeansClustering <- function(variabile, n_clust, n_start=25, iter_max=500) {
+
+  best_km <- NULL
+  best_ratio <- -Inf  
   
-  # Calcola misure di non omogeneità
-  trH_within <- sum(km$withinss)
-  trH_between <- km$betweenss
+  for (i in 1:10) {  
+    km <- kmeans(variabile, centers = n_clust, nstart = n_start, iter.max = iter_max)
+    ratio <- km$betweenss / sum(km$withinss)  
+    
+    if (ratio > best_ratio) {  
+      best_km <- km
+      best_ratio <- ratio
+    }
+  }
+  return(best_km)
   
-  plot(data, col = km$cluster, xlab = variabile, ylab = variabile)
-  points(km$centers, col = 1:n_clust, pch = 8, cex = 2)
+}
+
+# Funzione per eseguire il clustering K-Means su una variabile specifica e stampare i plot
+f_plotsClustering <- function(data, var_name, k_range = 2:10, best_k = "auto") {
   
-  return(list(trH_within = trH_within, trH_between = trH_between, clusters = km$cluster))
+  # Normalizza la variabile scelta
+  data_cluster <- scale(as.matrix(data[[var_name]]))
+  
+  # Esegui K-Means per diversi valori di k con ottimizzazione
+  set.seed(123)
+  k_models <- lapply(k_range, function(k) f_kMeansClustering(data_cluster, k))
+  
+  # Calcola le metriche per ogni k
+  wcss_values <- sapply(k_models, function(km) sum(km$withinss))
+  bcss_values <- sapply(k_models, function(km) km$betweenss)
+  silhouette_scores <- sapply(k_models, function(km) {
+    silhouette_res <- silhouette(km$cluster, dist(data_cluster))
+    mean(silhouette_res[, 3])  
+  })
+  ch_index_values <- sapply(seq_along(k_models), function(i) {
+    k <- k_range[i]
+    (bcss_values[i] / (k - 1)) / (wcss_values[i] / (nrow(data) - k))
+  })
+  
+  # Creazione DataFrame con i risultati
+  df_results <- data.frame(
+    K = k_range,
+    WCSS = wcss_values,
+    BCSS = bcss_values,
+    Silhouette = silhouette_scores,
+    Calinski_Harabasz = ch_index_values
+  )
+  
+  print(df_results)
+  
+  # Se best_k = "auto", scegli il miglior k in base al rapporto BCSS/WCSS
+  if (best_k == "auto") {
+    best_k <- k_range[which.max(bcss_values / wcss_values)]
+  }
+  
+  # Grafico Elbow Method
+  elbow_plot <- ggplot(df_results, aes(x = K, y = WCSS)) +
+    geom_point(color = "red", size = 3) +
+    geom_line(color = "blue", size = 1) +
+    labs(title = paste("Elbow Method per", var_name, "(con kmeans)"),
+         x = "Numero di Cluster",
+         y = "Within-cluster Sum of Squares (WCSS)") +
+    theme_minimal()
+  
+  print(elbow_plot)
+  
+  # Grafico Silhouette Method
+  silhouette_plot <- ggplot(df_results, aes(x = K, y = Silhouette)) +
+    geom_point(color = "red", size = 3) +
+    geom_line(color = "blue", size = 1) +
+    labs(title = paste("Silhouette Method per", var_name, "(con kmeans)"),
+         x = "Numero di Cluster",
+         y = "Coefficiente di Silhouette") +
+    theme_minimal()
+  
+  print(silhouette_plot)
+  
+  # Analisi per best_k
+  best_km <- k_models[[which(k_range == best_k)]]
+  
+  if ("data.table" %in% class(data)) {
+    data[, Cluster := as.factor(best_km$cluster)]
+  } else {
+    data$Cluster <- as.factor(best_km$cluster)
+  }
+  
+  # Distribuzione della variabile label nei cluster
+  if ("data.table" %in% class(data)) {
+    label_distribution <- data[, .N, by = .(Cluster, label)]
+  } else {
+    label_distribution <- as.data.frame(table(data$Cluster, data$label))
+    colnames(label_distribution) <- c("Cluster", "label", "N")
+  }
+  
+  bar_plot <- ggplot(label_distribution, aes(x = Cluster, y = N, fill = as.factor(label))) +
+    geom_bar(stat = "identity", position = "dodge") +
+    geom_text(aes(label = N), vjust = -0.5, size = 5) +
+    scale_fill_manual(values = c("red", "plum"), labels = c("Phishing (0)", "Non-Phishing (1)")) +
+    labs(title = paste("Numero di label nei cluster di", var_name, "(K =", best_k, ")"),
+         x = "Cluster",
+         y = "Numero di istanze",
+         fill = "Label") +
+    theme_minimal()
+  
+  print(bar_plot)
+  
+  
+  # Creazione del dataframe dei centroidi e trasformazione alla scala originale
+  centroids <- data.frame(
+    Cluster = factor(1:nrow(best_km$centers)), 
+    x = best_km$centers[, 1] * attr(data_cluster, "scaled:scale")[1] + attr(data_cluster, "scaled:center")[1]
+  )
+  
+
+  scatter_plot <- ggplot(data, aes_string(x = var_name, y = var_name, color = "Cluster")) +
+    geom_point(alpha = 0.6) +
+    # Centroidi riportati alla scala originale
+    geom_point(data = centroids, 
+               aes(x = x, y = x), 
+               color = "black", shape = 8, size = 4) +  # Centroidi come stelline
+    labs(title = paste("Clusterizzazione di", var_name, "per K =", best_k),
+         x = var_name,
+         y = var_name,
+         color = "Cluster") +
+    theme_minimal()
+  
+  print(scatter_plot)
+  
 }

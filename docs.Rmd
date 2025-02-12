@@ -1,7 +1,7 @@
 ---
 title: "SAD Project Phishing 10"
 author: "Eljon Hida (0522501890), Francesco Ferrara (0522501959)"
-date: "2025-02-15"
+date: "2025-02-13"
 output:
   html_document:
     toc: true
@@ -9,13 +9,19 @@ output:
   pdf_document: default
 ---
 
-#Caricamento dataset e preparazione
+# Caricamento dataset e preparazione
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(readxl)
 library(ggplot2)
 library(dplyr)
+library(car)
+library(rstatix) # Libreria per effetto della dimensione nel test Mann-Whitney U
+library(data.table)
+library(ggplot2)
+library(cluster)
+library(factoextra)
 
 #---- DEFINIZIONE DEI PATH ----
 
@@ -26,6 +32,10 @@ source("Functions.R")
 #---- CARICAMENTO DEI DATASET ----
 
 dataset <- read.csv("DatasetStatistica - Phishing_URL_Dataset_10.csv")
+df <- data.frame(dataset)
+
+dataset_sintetico <- read.csv("Dataset_Sintetico_Finale.csv")
+
 
 urls <- c(dataset$URLLength)
 phishing_urls <- dataset[dataset$label == 0, c("URLLength")]
@@ -44,6 +54,7 @@ quartiliExtRef <- quantile(extref, probs = c(0, 0.25, 0.5, 0.75, 1), na.rm = TRU
 ## Indici di Centralità
 
 ```{r indici di centralità, echo=FALSE}
+
 #---- CALCOLO INDICI DI CENTRALITÀ ----
 
 urls_min = min(urls)
@@ -182,7 +193,7 @@ ExtRef_indiciDisp
 
 ```{r quartili, echo=FALSE}
 
-par(mfrow=c(2, 3)) #Suddivisione finestra grafica nella quale verrano inseriti i plot(2 righe e 3 colonne)
+par(mfrow=c(2, 3)) # Suddivisione finestra grafica nella quale verrano inseriti i plot(2 righe e 3 colonne)
 
 f_quantili(urls,"ALL-URLLength")
 f_quantili(phishing_urls,"Phishing-URLLength")
@@ -206,12 +217,122 @@ f_FdDC(dataset)
 
 # Statistica Descrittiva Bivariata
 
-## Regressione Lineare
+## Regressione Logistica Multipla
 
 ```{r grafici di regressione, echo=FALSE}
+
+#---- Dataset Reale ----
+
+cor(dataset$URLLength, dataset$NoOfExternalRef, method = "pearson") # Calcolo la correlazione tra le due per accertarmi che sia possibile usare entrambe le variabili per la regressione logistica multipla
+
+
+dataset_reg <- dataset[, c("label", "URLLength", "NoOfExternalRef")]
+
+# Conversione della variabile dipendente in fattore (necessario per glm)
+dataset_reg$label <- as.factor(dataset_reg$label)
+
+# Creazione del modello di regressione logistica
+model <- glm(label ~ URLLength + NoOfExternalRef, data = dataset_reg, family = binomial)
+
+summary(model)
+
+
+#---- Dataset Sintetico ----
+
+cor(dataset_sintetico$URLLength, dataset_sintetico$NoOfExternalRef, method = "pearson")
+
+
+dataset_reg_sintetico <- dataset_sintetico[, c("label", "URLLength", "NoOfExternalRef")]
+
+
+dataset_reg_sintetico$label <- as.factor(dataset_reg_sintetico$label)
+
+
+model_sintetico <- glm(label ~ URLLength + NoOfExternalRef, data = dataset_reg_sintetico, family = binomial)
+
+summary(model_sintetico)
+
+```
+
+# CLustering
+
+## Kmeans
+
+```{r clustering, echo=FALSE}
+
+# Usa la funzione su una variabile specifica
+f_plotsClustering(dataset, "URLLength", k_range = 2:10, best_k = 3)
+
+f_plotsClustering(dataset, "NoOfExternalRef", k_range = 2:10, best_k = 3)
+
+```
+
+# Inferenza Statistica
+
+## Normalità delle distribuzioni
+
+### Shapiro-Wilk
+
+```{r shapiro, echo=FALSE}
+#---- Campioni per URLLength e NoOfExternalRef----
+sample_url <- sample(urls, 500)
+sample_ext <- sample(extref, 500)
+
+#---- Shapiro-Wilk test----
+shapiro.test(sample(urls, 500))
+shapiro.test(sample(extref, 500))
+
+#---- Q-Q Plots----
+qqnorm(sample_url, main = "Q-Q Plot per URLLength (Campione)",col = "blue")
+qqline(sample_url, col = "red")
+
+
+qqnorm(sample_ext, main = "Q-Q Plot per NoOfExternalRef (Campione)", col = "green")
+qqline(sample_ext, col = "red")
+
+```
+
+## Test di significatività
+
+### Test Mann-Whitney U
+
+```{r mann, echo=FALSE}
+
+
+#---- Test di Mann-Whitney U ----
+test_url <- wilcox_test(dataset, URLLength ~ label)
+test_url
+
+
+test_ext <- wilcox_test(dataset, NoOfExternalRef ~ label)
+test_ext
+
+#---- Effetto della dimensione ----
+effsize_url <- wilcox_effsize(dataset, URLLength ~ label)
+effsize_url
+
+
+effsize_ext <- wilcox_effsize(dataset, NoOfExternalRef ~ label)
+effsize_ext
 
 
 
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## Intervalli di Confidenza
+
+### Metodo dei Quantili
+
+```{r ic, echo=FALSE}
+
+#---- Calcolare l'intervallo di confidenza per la mediana usando i quantili----
+ci_phishing_extref <- quantile(phishing_extref, probs = c(0.025, 0.975), na.rm = TRUE)
+ci_legitimate_extref <- quantile(legitimate_extref, probs = c(0.025, 0.975), na.rm = TRUE)
+
+
+print(data.frame(Gruppo = c("Phishing", "Legittimo"),
+                 Intervallo_Inferiore = c(ci_phishing_extref[1], ci_legitimate_extref[1]),
+                 Intervallo_Superiore = c(ci_phishing_extref[2], ci_legitimate_extref[2])))
+
+
+```
