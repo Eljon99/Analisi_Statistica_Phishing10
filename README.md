@@ -8,6 +8,7 @@ Questo progetto è stato sviluppato per l'esame di Statistica ed Analisi dei Dat
   <img src="https://contrib.rocks/image?repo=Eljon99/Analisi_Statistica_Phishing10" />
 </a>
 
+
 * [Eljon Hida](https://github.com/Eljon99)
 * [Francesco Ferrara](https://github.com/Rokuoganz)
 
