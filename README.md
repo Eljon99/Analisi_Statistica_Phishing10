@@ -20,6 +20,11 @@ Questo progetto è stato sviluppato per l'esame di Statistica ed Analisi dei Dat
 Il dataset usato in questo studio cataloga vari URL in: URL di phishing e URL legittimi. Questa catalogazione è fatta attraverso la variabile label che, quando vale 0 indica un sito di phishing e 1 nel caso di sito legittimo. Il dataset presenta altre variabili che potrebbero permettere un'identificazione prematura di questi URL come la lunghezza degli stessi, il numero di riferimenti esterni/interni, il numero di caratteri speciali ecc.
 
 ## Strumenti e Tecnologie
+<div style="display: flex; align-items: center; gap: 30px;">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/1/1b/R_logo.svg" width="50"/>
+  <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/RStudio_logo_flat.svg" width="100"/>
+</div>
+
 - R: per l'analisi statistica dei dati.
 - RStudio: IDE.
 - R Markdown: per la presentazione dei risultati.
