@@ -28,12 +28,12 @@ Il dataset usato in questo studio cataloga vari URL in: URL di phishing e URL le
 1. Installare R e RStudio.
 2. Clonare la repository GitHub.
 3. Aprire il progetto in RStudio.
-4. Esegui il codice presente nel file `docs.Rmd` per generare l'analisi e visualizzare i risultati.
-5. Eseguire i codici `ClusteringURLLength.R` e `ClusteringNoOfExternalRef.R` per visualizzare il clustering.
+4. Esegui il codice presente nel file [docs.Rmd](docs.Rmd) per generare l'analisi e visualizzare i risultati.
+5. Eseguire i codici [ClusteringURLLength.R](ClusteringURLLength.R) e [ClusteringNoOfExternalRef.R](ClusteringNoOfExternalRef.R) per visualizzare il clustering.
 
 ## Struttura del Progetto
-- `docs.Rmd`: Documento R Markdown con l'analisi completa.
-- `Functions.R`: Funzioni R utilizzate per l'analisi dei dati.
-- `Datasets/`: Directory contenente il dataset reale e quello sintetico.
-- `ClusteringURLLength.R`: Funzioni di clustering e plot per URLLength.
-- `ClusteringNoOfExternalRef.R`: Funzioni di clustering e plot per NoOfExternalRef.  
+- [docs.Rmd](docs.Rmd) : Documento R Markdown con l'analisi completa.
+- [Functions.R](Functions.R) : Funzioni R utilizzate per l'analisi dei dati.
+- [Datasets/](Datasets/) : Directory contenente il dataset reale e quello sintetico.
+- [ClusteringURLLength.R](ClusteringURLLength.R) : Funzioni di clustering e plot per URLLength.
+- [ClusteringNoOfExternalRef.R](ClusteringNoOfExternalRef.R) : Funzioni di clustering e plot per NoOfExternalRef.  
