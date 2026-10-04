@@ -39,6 +39,7 @@ Il dataset usato in questo studio cataloga vari URL in: URL di phishing e URL le
 ## Struttura del Progetto
 - [docs.Rmd](docs.Rmd) : Documento R Markdown con l'analisi completa.
 - [Functions.R](Functions.R) : Funzioni R utilizzate per l'analisi dei dati.
-- [Datasets/](Datasets/) : Directory contenente il dataset reale e quello sintetico.
+- [Dataset/](Dataset/) : Directory contenente il dataset reale e quello sintetico.
+- [Documentazione](ProgettoPhishing10.pdf) : Documentazione del progetto
 - [ClusteringURLLength.R](ClusteringURLLength.R) : Funzioni di clustering e plot per URLLength.
 - [ClusteringNoOfExternalRef.R](ClusteringNoOfExternalRef.R) : Funzioni di clustering e plot per NoOfExternalRef.  
